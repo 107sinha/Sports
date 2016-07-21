@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Students</string>
+    <string name="add_student">Add Student</string>
+    <string name="title_add_student">Add Student</string>
+    <string name="hint_name">FULL NAME</string>
+    <string name="hint_addr">HOME ADDRESS</string>
+    <string name="hint_email">EMAIL ADDRESS</string>
+    <string name="hint_phone">PHONE NUMBER</string>
+    <string name="done">Done</string>
+    <string name="err_msg_name">Enter your full name</string>
+    <string name="err_msg_addr">Enter your address</string>
+    <string name="err_msg_email">Enter valid email address</string>
+    <string name="err_msg_phone">Invalid Number</string>
+    <string name="student_file">Student File</string>
+    <string name="student_name">Student Name</string>
+    <string name="student_address">Student Address</string>
+    <string name="student_email">Student Email</string>
+    <string name="student_phone">Student Phone</string>
+    <string name="student_image">Student Image</string>
+    <string name="error_image">Not uploaded. Try Again!</string>
+    <string name="key">key</string>
+</resources>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    card_view:cardCornerRadius="4dp"
+    card_view:cardElevation="4dp">
+
+    <LinearLayout
+        android:id="@+id/imagesec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/profile_placeholder"
+            android:layout_weight="1"/>
+
+        <LinearLayout
+            android:id="@+id/listssec"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/studName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:background="@drawable/myrect"
+                android:layout_margin="4dp"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/studAddr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="B 202 Prakruthi Meadows Appartment Amruthahalli"
+                android:textSize="12sp"
+                android:background="@drawable/txt_bg"
+                android:clickable="true"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:layout_margin="4dp"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/studEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="107sinha@gmail.com"
+                android:textSize="16sp"
+                android:background="@drawable/txt_bg"
+                android:clickable="true"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:layout_margin="4dp"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/studPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="8892275587"
+                android:textSize="20sp"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:background="@drawable/txt_bg"
+                android:clickable="true"
+                android:layout_margin="4dp"
+                android:padding="4dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>
