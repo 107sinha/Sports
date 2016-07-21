@@ -15,27 +15,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.deepanshu.sportscafe.App;
 import com.example.deepanshu.sportscafe.R;
 import com.example.deepanshu.sportscafe.activity.AddStudent;
 import com.example.deepanshu.sportscafe.model.Students;
 
 import java.util.ArrayList;
 
-/**
- * Created by deepanshu on 19/7/16.
- */
 public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements RecyclerView.OnItemTouchListener {
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
 
     private Context mContext;
     private ArrayList<Students> mStudentList;
-
-    Students students;
 
 
     private OnItemClickListener mListener;
@@ -65,7 +60,7 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         void onLongItemClick(View view, int position);
     }
 
-    GestureDetector mGestureDetector;
+    private GestureDetector mGestureDetector;
 
     @Override
     public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
@@ -115,11 +110,10 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof HeaderHolder) {
-            HeaderHolder headerholder = (HeaderHolder) holder;
 
         } else if (holder instanceof ListHolder) {
 
-            students = getItem(position - 1);
+            Students students = getItem(position - 1);
             ListHolder viewholder = (ListHolder) holder;
 
             viewholder.name.setText(students.getName());
@@ -165,34 +159,8 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         return mStudentList.size() + 1;
     }
 
-//    @Override
-//    public void onClick(View view) {
-//        switch (view.getId()) {
-//
-//            case R.id.header:
-//                mContext.startActivity(new Intent(mContext, AddStudent.class));
-//                break;
-//
-//            case R.id.studName:
-//                break;
-//
-//            case R.id.studEmail:
-//                break;
-//
-//            case R.id.studAddr:
-//                break;
-//
-//            case R.id.studPhone:
-//                break;
-//
-//            default:
-//                break;
-//
-//        }
-//    }
-
     // List View
-    public static class ListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private static class ListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView name;
         TextView addr;
@@ -225,30 +193,23 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
             switch (view.getId()) {
 
                 case R.id.studName:
-//                    Toast.makeText(myContext, "" + name.getText() + "pos" + position, Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(myContext, AddStudent.class);
-                    intent.putExtra("pos", position);
-                    intent.putExtra("name", name.getText());
-                    intent.putExtra("email", email.getText());
-                    intent.putExtra("addr", addr.getText());
-                    intent.putExtra("phone", phone.getText());
-//                    myContext.startActivity(intent);
+                    intent.putExtra(App.ID, position);
+                    intent.putExtra(App.NAME, name.getText());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    myContext.startActivity(intent);
                     break;
 
                 case R.id.studEmail:
-//                    Toast.makeText(myContext, "" + email.getText() + "pos" + position, Toast.LENGTH_LONG).show();
                     Intent gmail = new Intent(Intent.ACTION_SEND);
                     gmail.putExtra(Intent.EXTRA_EMAIL  , new String[]{email.getText().toString()});
                     gmail.setType("message/rfc822");
                     if (gmail.resolveActivity(myContext.getPackageManager()) != null) {
-//                        Toast.makeText(myContext, "Choose an Email client :", Toast.LENGTH_LONG).show();
                         myContext.startActivity(Intent.createChooser(gmail, "Choose an Email client :"));
                     }
                     break;
 
                 case R.id.studAddr:
-                    Toast.makeText(myContext, "" + addr.getText() + "pos" + position, Toast.LENGTH_LONG).show();
-                    // Create a Uri from an intent string. Use the result to create an Intent.
                     Uri gmmIntentUri = Uri.parse("geo:0,0?q="+Uri.encode(addr.getText().toString()));
 
                     // Create an Intent from gmmIntentUri. Set the action to ACTION_VIEW
@@ -263,7 +224,6 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                     break;
 
                 case R.id.studPhone:
-//                    Toast.makeText(myContext, "" + phone.getText() + "pos" + position, Toast.LENGTH_LONG).show();
                     Intent callIntent = new Intent(Intent.ACTION_CALL);
                     callIntent.setData(Uri.parse("tel:" + phone.getText()));
                     if (ActivityCompat.checkSelfPermission(myContext, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
@@ -290,11 +250,11 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     }
 
     // Header View
-    public static class HeaderHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private static class HeaderHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView header;
         Context headContext;
 
-        public HeaderHolder(View itemView) {
+        HeaderHolder(View itemView) {
             super(itemView);
             header = (TextView) itemView.findViewById(R.id.header);
             headContext = itemView.getContext();
@@ -305,7 +265,9 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         @Override
         public void onClick(View view) {
             if (view.getId() == R.id.header) {
-                headContext.startActivity(new Intent(headContext, AddStudent.class));
+                Intent i = new Intent(headContext, AddStudent.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                headContext.startActivity(i);
             }
         }
     }

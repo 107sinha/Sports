@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -14,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.NavUtils;
@@ -22,7 +24,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Base64;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.Menu;
@@ -32,7 +33,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -42,16 +42,16 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.example.deepanshu.sportscafe.App;
 import com.example.deepanshu.sportscafe.R;
-import com.example.deepanshu.sportscafe.SharedPreference;
 import com.example.deepanshu.sportscafe.Utility;
 import com.example.deepanshu.sportscafe.model.Students;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 public class AddStudent extends AppCompatActivity implements View.OnClickListener {
@@ -59,7 +59,7 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
     private static final int SELECT_PICTURE = 100;
     private static final int REQUEST_CAMERA = 1;
 
-    String userChoosenTask;
+    private String userChoosenTask;
 
     private static final String TAG = AddStudent.class.getSimpleName();
 
@@ -75,11 +75,14 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
 
     private ImageView profile;
 
-    ProgressBar progressBar;
-
-    private SharedPreference shared;
-
     private String studName, studAddr, studEmail, studPhone, studImage;
+
+    private ArrayList<Students> studentsArrayList = new ArrayList<>();
+    private SharedPreferences sharedArrayList;
+    private int addIndex = 0;
+
+    private int choosepos = 0;
+    private String choosename;
 
     private RequestListener<String, GlideDrawable> requestListener = new RequestListener<String, GlideDrawable>() {
         @Override
@@ -119,13 +122,35 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
         profile = (ImageView) findViewById(R.id.profile);
         profile.setOnClickListener(this);
 
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
 
-        shared = new SharedPreference();
+        sharedArrayList = getSharedPreferences(App.STUDENTLIST, Context.MODE_PRIVATE);
 
+        // update terms
+        choosename = getIntent().getStringExtra(App.NAME);
+        choosepos = getIntent().getIntExtra(App.ID, 0);
+
+        if (choosename != null) {
+            name.setText(sharedArrayList.getString(App.NAME + choosepos, ""));
+            addr.setText(sharedArrayList.getString(App.ADDR + choosepos, ""));
+            email.setText(sharedArrayList.getString(App.EMAIL + choosepos, ""));
+            phone.setText(sharedArrayList.getString(App.PHONE + choosepos, ""));
+            studImage = sharedArrayList.getString(App.IMAGE + choosepos, "");
+            Glide.with(this)
+                    .load(studImage)
+                    .centerCrop()
+                    .crossFade()
+                    .thumbnail(0.5f)
+                    .transform(new CircleTransform(this))
+                    .listener(requestListener)
+                    .placeholder(R.drawable.profile_placeholder)
+                    .error(R.drawable.profile_placeholder)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(profile);
+        } else {
+            addIndex = getList();
+        }
     }
 
     @Override
@@ -149,40 +174,6 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
         }
         return super.onOptionsItemSelected(item);
     }
-
-    /* Choose an image from Gallery */
-    private void openImageChooser() {
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
-    }
-
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (resultCode == RESULT_OK) {
-//            if (requestCode == SELECT_PICTURE) {
-//                // Get the url from data
-//                Uri selectedImageUri = data.getData();
-//                if (null != selectedImageUri) {
-//                    // Get the path from the Uri
-//                    studImage = getPathFromURI(selectedImageUri);
-//                    Log.i(TAG, "Image Path : " + studImage);
-//                    // Set the image in ImageView
-//                    Glide.with(this)
-//                            .load(studImage)
-//                            .centerCrop()
-//                            .crossFade()
-//                            .thumbnail(0.5f)
-//                            .transform(new CircleTransform(this))
-//                            .listener(requestListener)
-//                            .placeholder(R.drawable.profile_placeholder)
-//                            .error(R.drawable.profile_placeholder)
-//                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                            .into(profile);
-//                }
-//            }
-//        }
-//    }
 
         /* Get the real path from the URI */
 
@@ -220,15 +211,88 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
             return;
         }
 
+        SharedPreferences.Editor editorArrayList = sharedArrayList.edit();
+
+        if (choosepos != 0) {
+            editorArrayList.putString(App.ID+choosepos, "" + addIndex).apply();
+            editorArrayList.putString(App.NAME+choosepos, studName).apply();
+            editorArrayList.putString(App.ADDR+choosepos, studAddr).apply();
+            editorArrayList.putString(App.EMAIL+choosepos, studEmail).apply();
+            editorArrayList.putString(App.IMAGE+choosepos, studImage).apply();
+            editorArrayList.putString(App.PHONE+choosepos, studPhone).apply();
+
+            Toast.makeText(getApplicationContext(), "Successfull Updated", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(AddStudent.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+
+
+            return;
+        }
+
+        int index = 1;
+
         Students students = new Students();
         students.setImage(studImage);
         students.setName(studName);
         students.setAddress(studAddr);
         students.setEmail(studEmail);
-        students.setNumber(studPhone);;
+        students.setNumber(studPhone);
 
-        shared.addFavorite(this, students);
+        studentsArrayList.add(students);
+
+        Intent intent = new Intent(AddStudent.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+
         Toast.makeText(getApplicationContext(), "Successfull Added", Toast.LENGTH_SHORT).show();
+
+        // store prev and current
+
+        for (int j = 0 ; j < studentsArrayList.size(); j++) {
+            editorArrayList.putString(App.ID+index, "" + index).apply();
+            editorArrayList.putString(App.NAME+index, studentsArrayList.get(j).getName()).apply();
+            editorArrayList.putString(App.ADDR+index, studentsArrayList.get(j).getAddress()).apply();
+            editorArrayList.putString(App.EMAIL+index, studentsArrayList.get(j).getEmail()).apply();
+            editorArrayList.putString(App.IMAGE+index, studentsArrayList.get(j).getImage()).apply();
+            editorArrayList.putString(App.PHONE+index, studentsArrayList.get(j).getNumber()).apply();
+            index++;
+
+            if (j == (studentsArrayList.size() - 1)) {
+                editorArrayList.putString(App.ID+addIndex, "" + addIndex).apply();
+                editorArrayList.putString(App.NAME+addIndex, studentsArrayList.get(j).getName()).apply();
+                editorArrayList.putString(App.ADDR+addIndex, studentsArrayList.get(j).getAddress()).apply();
+                editorArrayList.putString(App.EMAIL+addIndex, studentsArrayList.get(j).getEmail()).apply();
+                editorArrayList.putString(App.IMAGE+addIndex, studentsArrayList.get(j).getImage()).apply();
+                editorArrayList.putString(App.PHONE+addIndex, studentsArrayList.get(j).getNumber()).apply();
+            }
+        }
+
+    }
+
+    // added in list
+    private int getList() {
+        int i = 1;
+
+        studentsArrayList.clear();
+
+        while (true) {
+            if (!sharedArrayList.getString(App.ID+i, "").equals("")) {
+
+                Students stud = new Students();
+                stud.setId(sharedArrayList.getString(App.ID+i, ""));
+                stud.setName(sharedArrayList.getString(App.NAME+i, ""));
+                stud.setAddress(sharedArrayList.getString(App.ADDR+i, ""));
+                stud.setEmail(sharedArrayList.getString(App.EMAIL+i, ""));
+                stud.setImage(sharedArrayList.getString(App.IMAGE+i, ""));
+                stud.setNumber(sharedArrayList.getString(App.PHONE+i, ""));
+
+                studentsArrayList.add(stud);
+                i++;
+            } else
+                return i;
+        }
     }
 
     private boolean validateName() {
@@ -402,12 +466,6 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
         finish();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-    }
-
     private void selectImage() {
         final CharSequence[] items = { "Take Photo", "Choose from Library",
                 "Cancel" };
@@ -448,7 +506,7 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case Utility.MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -456,8 +514,6 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
                         cameraIntent();
                     else if(userChoosenTask.equals("Choose from Library"))
                         galleryIntent();
-                } else {
-//code for deny
                 }
                 break;
         }
@@ -494,44 +550,15 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
                             .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(profile);
                 }
-//        Bitmap bm=null;
-//        if (data != null) {
-//            try {
-//                bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        studImage = BitMapToString(bm);
-//        Toast.makeText(getApplicationContext(), studImage, Toast.LENGTH_LONG).show();
-//        profile.setImageBitmap(bm);
-//        Glide.with(this)
-//                .load(BitMapToString(bm))
-//                .centerCrop()
-//                .crossFade()
-//                .thumbnail(0.5f)
-//                .transform(new CircleTransform(this))
-//                .placeholder(R.drawable.profile_placeholder)
-//                .error(R.drawable.profile_placeholder)
-//                .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                .into(profile);
-
-    }
-
-    public String BitMapToString(Bitmap bitmap){
-        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
-        byte [] b=baos.toByteArray();
-        String temp= Base64.encodeToString(b, Base64.DEFAULT);
-        return temp;
     }
 
     private void onCaptureImageResult(Intent data) {
 
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        if (thumbnail != null) {
+            thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        }
         File destination = new File(Environment.getExternalStorageDirectory(),
                 System.currentTimeMillis() + ".jpg");
         FileOutputStream fo;
@@ -540,8 +567,6 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
             fo = new FileOutputStream(destination);
             fo.write(bytes.toByteArray());
             fo.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -549,9 +574,5 @@ public class AddStudent extends AppCompatActivity implements View.OnClickListene
         Uri uri = Uri.fromFile(destination);
         studImage = uri.toString();
         profile.setImageBitmap(thumbnail);
-
-        Toast.makeText(getApplicationContext(), studImage, Toast.LENGTH_LONG).show();
-
     }
-
 }
